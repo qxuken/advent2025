@@ -11,5 +11,10 @@ path = "day1/day1.rs"
 name = "day2"
 path = "day2/day2.rs"
 
+[[bin]]
+name = "day3"
+path = "day3/day3.rs"
+
+
 [dependencies]
 rayon = "1.11.0"

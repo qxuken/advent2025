@@ -11,60 +11,46 @@ typedef struct {
   int size;
 } Map;
 
-static inline int index_2d(int size, int x, int y) {
-  return y * (size + 1) + x;
-}
+static inline int index_2d(int stride, int x, int y) { return y * stride + x; }
 
-static int traverse_map_rec(Map *m, int x, int y);
-static int traverse_map_around(Map *m, int x, int y);
+static int dfs(Map *m, int x, int y) {
+  const int size = m->size;
+  const int stride = size + 1;
+  unsigned char *restrict grid = m->value;
 
-static int traverse_map_around(Map *m, int x, int y) {
-  int counter = 0;
-  int size = m->size;
+  const int y_start = (x >= 0 && y > 0) ? y - 1 : 0;
+  const int y_end = (y + 1 < size) ? y + 1 : (size - 1);
+  const int x_start = (x > 0) ? x - 1 : 0;
+  const int x_end = (x + 1 < size) ? x + 1 : (size - 1);
 
-  int y_start = (y - 1 >= 0) ? (y - 1) : 0;
-  int y_end = (y + 1 < size) ? (y + 1) : (size - 1);
-  int x_start = (x - 1 >= 0) ? (x - 1) : 0;
-  int x_end = (x + 1 < size) ? (x + 1) : (size - 1);
-
+  int neighbor_count = 0;
   for (int cy = y_start; cy <= y_end; ++cy) {
-    for (int cx = x_start; cx <= x_end; ++cx) {
-      int idx = index_2d(size, cx, cy);
-      if (m->value[idx] == '@') {
-        counter += traverse_map_rec(m, cx, cy);
-      }
-    }
-  }
-
-  return counter;
-}
-
-static int traverse_map_rec(Map *m, int x, int y) {
-  int counter = 0;
-  int size = m->size;
-
-  int y_start = (y - 1 >= 0) ? (y - 1) : 0;
-  int y_end = (y + 1 < size) ? (y + 1) : (size - 1);
-  int x_start = (x - 1 >= 0) ? (x - 1) : 0;
-  int x_end = (x + 1 < size) ? (x + 1) : (size - 1);
-
-  for (int cy = y_start; cy <= y_end; ++cy) {
-    for (int cx = x_start; cx <= x_end; ++cx) {
+    unsigned char *row = grid + cy * stride + x_start;
+    for (int cx = x_start; cx <= x_end; ++cx, ++row) {
       if (cy == y && cx == x) {
         continue;
       }
-      int idx = index_2d(size, cx, cy);
-      if (m->value[idx] == '@') {
-        counter += 1;
-        if (counter > 3) {
+      if (*row == '@') {
+        if (++neighbor_count > 3) {
           return 0;
         }
       }
     }
   }
 
-  m->value[index_2d(size, x, y)] = 'x';
-  return 1 + traverse_map_around(m, x, y);
+  grid[index_2d(stride, x, y)] = 'x';
+
+  int result = 1;
+  for (int cy = y_start; cy <= y_end; ++cy) {
+    unsigned char *row = grid + cy * stride + x_start;
+    for (int cx = x_start; cx <= x_end; ++cx, ++row) {
+      if (*row == '@') {
+        result += dfs(m, cx, cy);
+      }
+    }
+  }
+
+  return result;
 }
 
 int main(int argc, char **argv) {
@@ -99,13 +85,14 @@ int main(int argc, char **argv) {
 
   log("m.size = %d\n", m.size);
 
+  const int stride = m.size + 1;
   int counter = 0;
-  log("========\n");
+
   for (int y = 0; y < m.size; ++y) {
+    unsigned char *row = m.value + y * stride;
     for (int x = 0; x < m.size; ++x) {
-      int idx = index_2d(m.size, x, y);
-      if (m.value[idx] == '@') {
-        counter += traverse_map_rec(&m, x, y);
+      if (row[x] == '@') {
+        counter += dfs(&m, x, y);
       }
     }
   }
@@ -116,7 +103,6 @@ int main(int argc, char **argv) {
 #endif
 
   print_value(counter, "%d");
-
   free(data);
   return 0;
 }

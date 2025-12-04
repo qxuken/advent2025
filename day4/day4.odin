@@ -31,7 +31,6 @@ main :: proc() {
 
 	m := new(Map)
 	m.value = data
-
 	for c in m.value {
 		if c == '\r' {
 			fmt.eprintln("Remove CR from data")
@@ -45,53 +44,65 @@ main :: proc() {
 
 	when ODIN_DEBUG do fmt.println("m.size =", m.size)
 
+	stride := m.size + 1
 	counter := 0
-	when ODIN_DEBUG do fmt.println("========")
+
 	for y in 0 ..< m.size {
+		row_base := y * stride
 		for x in 0 ..< m.size {
-			i := index(m.size, x, y)
-			if m.value[i] == '@' do counter += traverse_map_rec(m, x, y)
+			if m.value[row_base + x] == '@' {
+				counter += dfs(m, x, y)
+			}
 		}
 	}
+
 	when ODIN_DEBUG {
 		fmt.println(string(m.value))
 	}
+
 	fmt.println("counter =", counter)
-	vmem.arena_destroy(&arena)
 }
 
-index :: #force_inline proc(size, x, y: int) -> int {
-	return y * (size + 1) + x
-}
+dfs :: proc(m: ^Map, x, y: int) -> int {
+	size := m.size
+	stride := size + 1
+	value := m.value
 
-traverse_map_around :: proc(m: ^Map, x, y: int) -> int {
-	counter := 0
-	for cy in max(y - 1, 0) ..= min(y + 1, m.size - 1) {
-		for cx in max(x - 1, 0) ..= min(x + 1, m.size - 1) {
-			if m.value[index(m.size, cx, cy)] == '@' {
-				counter += traverse_map_rec(m, cx, cy)
-			}
-		}
-	}
-	return counter
-}
+	y_start := max(y - 1, 0)
+	y_end := min(y + 1, size - 1)
+	x_start := max(x - 1, 0)
+	x_end := min(x + 1, size - 1)
 
-traverse_map_rec :: proc(m: ^Map, x, y: int) -> int {
-	counter := 0
-	for cy in max(y - 1, 0) ..= min(y + 1, m.size - 1) {
-		for cx in max(x - 1, 0) ..= min(x + 1, m.size - 1) {
+	neighbor_count := 0
+	for cy in y_start ..= y_end {
+		row_base := cy * stride + x_start
+		for cx in x_start ..= x_end {
 			if cy == y && cx == x {
+				row_base += 1
 				continue
 			}
-			if m.value[index(m.size, cx, cy)] == '@' {
-				counter += 1
-				if counter > 3 {
+			if value[row_base] == '@' {
+				neighbor_count += 1
+				if neighbor_count > 3 {
 					return 0
 				}
 			}
+			row_base += 1
 		}
 	}
 
-	m.value[index(m.size, x, y)] = 'x'
-	return 1 + traverse_map_around(m, x, y)
+	value[y * stride + x] = 'x'
+
+	result := 1
+	for cy in y_start ..= y_end {
+		row_base := cy * stride + x_start
+		for cx in x_start ..= x_end {
+			if value[row_base] == '@' {
+				result += dfs(m, cx, cy)
+			}
+			row_base += 1
+		}
+	}
+
+	return result
 }

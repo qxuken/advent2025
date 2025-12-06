@@ -37,14 +37,14 @@ int any_parts_repeating(uint64_t n) {
 // NOTE: There was a bug, that could be caught with -Wall -Wextra -Wconversion
 // -Wsign-conversion
 uint64_t sum_patterns(uint64_t from, uint64_t to) {
-  log("%llu..=%llu\n", from, to);
+  log("%ld..=%ld\n", from, to);
   uint64_t sum = 0;
   for (uint64_t i = from; i <= to; i++) {
     if (any_parts_repeating(i)) {
       sum += i;
     }
   }
-  log_value(sum, "%llu");
+  log_value(sum, "%ld");
   return sum;
 }
 
@@ -123,7 +123,7 @@ int main(int argc, char *argv[]) {
 
   threadpool_destroy(&pool);
   uint64_t final_sum = atomic_load_explicit(&total_sum, memory_order_relaxed);
-  print_value(final_sum, "%llu");
+  print_value(final_sum, "%ld");
 
   da_free(data);
   return 0;

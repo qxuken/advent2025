@@ -1,3 +1,4 @@
+#include <ctype.h>
 #include <math.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -43,7 +44,7 @@ int main(int argc, char *argv[]) {
     unsigned char *end = &data[da_len(data) - 1];
 
     DeferLoopEnd(da_free(data)) {
-      log("Read bytes %llu\n", da_len(data));
+      log("Read bytes %ld\n", da_len(data));
 
       size_t row_size = 0;
 
@@ -72,13 +73,13 @@ int main(int argc, char *argv[]) {
 #if DEBUG
       foreach (row, numbers) {
         foreach (it, *row) {
-          log("%llu ", *it);
+          log("%ld ", *it);
         }
         log("\n");
       }
 #endif
-      log_value(da_cap(numbers), "%lld");
-      log_value(da_len(numbers), "%lld");
+      log_value(da_cap(numbers), "%ld");
+      log_value(da_len(numbers), "%ld");
 
       PerfMeasureLoopNamed("advance") {
         unsigned char *q = memchr(data, '\n', da_len(data));
@@ -106,7 +107,7 @@ int main(int argc, char *argv[]) {
             }
           } break;
           default: {
-            fprintf(stderr, "Unexpected data at %llu(%d)\n", p - &data[0], *p);
+            fprintf(stderr, "Unexpected data at %ld(%d)\n", p - &data[0], *p);
             return EXIT_FAILURE;
           }
           }
@@ -117,7 +118,7 @@ int main(int argc, char *argv[]) {
           i++;
         }
       }
-      print_value(sum, "%llu");
+      print_value(sum, "%ld");
 
       foreach (row, numbers) {
         da_free(*row);

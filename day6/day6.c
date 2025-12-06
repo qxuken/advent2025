@@ -28,14 +28,14 @@ int main(int argc, char *argv[]) {
     unsigned char *end = &data[da_len(data) - 1];
 
     DeferLoopEnd(da_free(data)) {
-      log("Read bytes %llu\n", da_len(data));
+      log("Read bytes %ld\n", da_len(data));
       uint64_t **numbers = make(uint64_t *, 1000);
       PerfMeasureLoopNamed("parse") {
         size_t i = 0;
         while (p < end && (*p != '*' && *p != '+')) {
           uint64_t num = 0;
-          if (!parse_row_number(&p, end, &num)) {
-            fprintf(stderr, "Unexpected data at %llu(%d)\n", p - &data[0], *p);
+          if (!parse_next_number(&p, end, &num)) {
+            fprintf(stderr, "Unexpected data at %ld(%d)\n", p - &data[0], *p);
             return EXIT_FAILURE;
           }
           if (i >= da_len(numbers)) {
@@ -55,13 +55,13 @@ int main(int argc, char *argv[]) {
 #if DEBUG
       foreach (row, numbers) {
         foreach (it, *row) {
-          log("%llu ", *it);
+          log("%ld ", *it);
         }
         log("\n");
       }
 #endif
-      log_value(da_cap(numbers), "%lld");
-      log_value(da_len(numbers), "%lld");
+      log_value(da_cap(numbers), "%ld");
+      log_value(da_len(numbers), "%ld");
 
       uint64_t sum = 0;
       PerfMeasureLoopNamed("sum") {
@@ -82,7 +82,7 @@ int main(int argc, char *argv[]) {
             }
           } break;
           default: {
-            fprintf(stderr, "Unexpected data at %llu(%d)\n", p - &data[0], *p);
+            fprintf(stderr, "Unexpected data at %ld(%d)\n", p - &data[0], *p);
             return EXIT_FAILURE;
           }
           }
@@ -93,7 +93,7 @@ int main(int argc, char *argv[]) {
           ++i;
         }
       }
-      print_value(sum, "%llu");
+      print_value(sum, "%lu");
 
       foreach (row, numbers) {
         da_free(*row);

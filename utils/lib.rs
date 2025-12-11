@@ -18,6 +18,11 @@ macro_rules! debug_block {
 }
 
 #[macro_export]
+macro_rules! perf_println {
+    ($($arg:tt)*) => (#[cfg(feature = "perf")] eprintln!($($arg)*));
+}
+
+#[macro_export]
 macro_rules! perf {
     ($label:expr, $body:block) => {{
         if cfg!(feature = "perf") {
